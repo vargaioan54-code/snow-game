@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="192" height="192">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#1e2b4a"/>
+      <stop offset="100%" stop-color="#0a0e16"/>
+    </radialGradient>
+    <radialGradient id="disc" cx="50%" cy="45%" r="60%">
+      <stop offset="0%" stop-color="#7ac0ff"/>
+      <stop offset="100%" stop-color="#2a6dc0"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="72" ry="72" fill="url(#bg)"/>
+  <circle cx="256" cy="256" r="196" fill="url(#disc)" stroke="rgba(255,255,255,0.15)" stroke-width="4"/>
+  <text x="256" y="360" font-size="280" text-anchor="middle" fill="#ffffff" font-family="Segoe UI Emoji, Apple Color Emoji, sans-serif">❄</text>
+</svg>

@@ -1,0 +1,388 @@
+/* ================= BASE ================= */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100vw; height: 100vh;
+  height: 100dvh; /* dynamic viewport height - se ajusteaza la bara browserului */
+  overflow: hidden;
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  background: #dfe7f7;
+  user-select: none;
+  -webkit-user-select: none;
+  position: fixed;
+  top: 0; left: 0;
+}
+
+#game { position: fixed; inset: 0; display: block; }
+
+#ui { position: fixed; inset: 0; pointer-events: none; }
+#ui .card, #ui button, #joystick { pointer-events: auto; }
+
+/* ================= CARDS ================= */
+.card {
+  background: rgba(18, 23, 38, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(10, 15, 35, 0.25);
+  backdrop-filter: blur(6px);
+}
+
+/* ---------- Level (stanga sus) ---------- */
+#level-card {
+  position: absolute; top: 22px; left: 22px;
+  width: 320px;
+  padding: 18px 22px 16px;
+}
+.level-title { font-size: 27px; font-weight: 800; margin-bottom: 12px; }
+.bar-track {
+  height: 15px; border-radius: 8px;
+  background: rgba(6, 9, 18, 0.75);
+  overflow: hidden;
+}
+.bar-track.slim { height: 12px; flex: 1; }
+.bar-fill { height: 100%; border-radius: 8px; transition: width .25s ease; }
+.bar-fill.xp { background: linear-gradient(90deg, #2ea8f5, #4fc6ff); box-shadow: 0 0 10px rgba(79,198,255,.6); }
+.bar-fill.white { background: linear-gradient(90deg, #c9d3e8, #eef2fb); }
+.bar-label { margin-top: 9px; font-size: 16px; color: rgba(255,255,255,.8); font-weight: 600; }
+
+/* ---------- Objective ---------- */
+#objective-card {
+  position: absolute; top: 172px; left: 22px;
+  width: 350px;
+  padding: 16px 20px 17px;
+}
+.objective-row { display: flex; align-items: center; gap: 13px; margin-bottom: 12px; }
+.objective-icon {
+  width: 44px; height: 44px; flex: 0 0 44px;
+  display: grid; place-items: center;
+  background: rgba(8, 12, 24, 0.7);
+  border-radius: 11px;
+  color: #7cd7ff; font-size: 25px;
+}
+.objective-text { font-size: 19px; font-weight: 700; }
+.objective-progress { display: flex; align-items: center; gap: 12px; }
+.progress-pct { font-size: 18px; font-weight: 800; color: rgba(255,255,255,.95); }
+
+/* ---------- Dreapta sus: monede + diamante + setari ---------- */
+#top-right {
+  position: absolute; top: 22px; right: 22px;
+  display: flex; gap: 10px; align-items: center;
+}
+.card.currency {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 20px 0 12px; height: 58px;
+  border-radius: 30px;
+  background: linear-gradient(135deg, rgba(28, 36, 58, 0.92), rgba(18, 23, 38, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 14px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.08);
+}
+.currency-value {
+  font-size: 22px; font-weight: 800;
+  letter-spacing: 0.3px;
+  text-shadow: 0 1px 2px rgba(0,0,0,.4);
+}
+#coin-card .currency-value { color: #ffd76a; }
+#diamond-card .currency-value { color: #7fe0ff; }
+.card.square {
+  width: 58px; height: 58px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  cursor: pointer;
+  background: linear-gradient(135deg, rgba(28, 36, 58, 0.92), rgba(18, 23, 38, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 14px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.08);
+  transition: transform .1s;
+}
+.card.square svg { width: 26px; height: 26px; }
+.card.square:active { transform: scale(.92); }
+
+/* Iconita moneda gold */
+.coin, .coin-gold {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, #ffefa0, #f8b830 55%, #b47415);
+  box-shadow: inset 0 0 0 2px rgba(184, 116, 16, 0.6), inset 0 -2px 3px rgba(0,0,0,.25), 0 1px 3px rgba(0,0,0,.4);
+  display: inline-block;
+  position: relative;
+}
+.coin-gold::before {
+  content: '$'; position: absolute; inset: 0;
+  display: grid; place-items: center;
+  color: rgba(120, 65, 5, 0.8);
+  font-size: 16px; font-weight: 900;
+}
+/* Iconita diamant */
+.coin-diamond {
+  width: 30px; height: 30px;
+  background: linear-gradient(135deg, #a8ecff, #4fc6f5 45%, #2a95c8);
+  clip-path: polygon(50% 0%, 100% 35%, 80% 100%, 20% 100%, 0% 35%);
+  box-shadow: 0 1px 4px rgba(0,0,0,.4);
+  display: inline-block;
+  position: relative;
+}
+.coin-diamond::after {
+  content: ''; position: absolute;
+  top: 15%; left: 20%; width: 25%; height: 20%;
+  background: rgba(255, 255, 255, 0.7);
+  clip-path: polygon(0 0, 100% 0, 60% 100%, 0 60%);
+}
+.coin.mini { width: 16px; height: 16px; box-shadow: inset 0 0 0 1.5px rgba(184,116,16,.55); }
+.coin.mini::before { font-size: 10px; }
+/* Iconita reputatie */
+.coin-rep {
+  width: 28px; height: 28px; display: inline-grid; place-items: center;
+  font-size: 20px; line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,.4));
+}
+
+/* ---------- Tool panel (dreapta) ---------- */
+#tool-panel {
+  position: absolute; right: 22px; top: 110px;
+  width: 254px;
+  padding: 10px;
+  display: flex; flex-direction: column; gap: 8px;
+  background: rgba(14, 18, 32, 0.55);
+}
+.tool-item { padding: 10px 12px; }
+.tool-icon { width: 50px; height: 50px; flex: 0 0 50px; }
+.tool-icon svg { width: 32px; height: 32px; }
+.tool-item {
+  position: relative;
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(20, 26, 44, 0.92);
+  border: 1px solid rgba(255,255,255,.05);
+}
+.tool-item.equipped {
+  border: 2px solid #3fd8ff;
+  background: rgba(26, 36, 58, 0.95);
+  box-shadow: 0 0 18px rgba(63, 216, 255, 0.35);
+}
+.tool-icon {
+  width: 58px; height: 58px; flex: 0 0 58px;
+  display: grid; place-items: center;
+  background: rgba(8, 11, 22, 0.75);
+  border-radius: 12px;
+}
+.tool-icon svg { width: 38px; height: 38px; }
+.tool-name { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+.tool-sub { display: flex; align-items: center; gap: 7px; font-size: 16px; font-weight: 800; color: #ffd76a; }
+.equipped-label { color: #2ee6a8; font-size: 14px; letter-spacing: .6px; }
+.tool-item.locked .tool-name { color: rgba(255,255,255,.9); }
+.lock { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); opacity: .85; }
+.lock svg { width: 18px; height: 18px; }
+
+/* ---------- Shop (aparte cand esti langa semn) ---------- */
+#shop-panel {
+  position: absolute; left: 50%; top: 22px;
+  transform: translateX(-50%);
+  padding: 16px 22px 14px;
+  width: 340px;
+  animation: shopFade 0.25s ease-out;
+}
+@keyframes shopFade { from { opacity: 0; transform: translateX(-50%) translateY(-10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+.shop-title { font-size: 24px; font-weight: 800; text-align: center; margin-bottom: 12px; letter-spacing: 1.2px; }
+.shop-list { display: flex; flex-direction: column; gap: 8px; }
+.shop-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(20, 26, 44, 0.9);
+  border: 1px solid rgba(255,255,255,.06);
+  cursor: pointer;
+  transition: transform .08s, background .15s;
+}
+.shop-item:hover { background: rgba(30, 40, 65, 0.95); }
+.shop-item:active { transform: scale(.97); }
+.shop-item.equipped { border: 2px solid #2ee6a8; background: rgba(30, 60, 50, 0.9); }
+.shop-item.locked { opacity: .8; cursor: default; }
+.shop-item.affordable { border: 1.5px solid #3fd8ff; }
+.shop-icon {
+  width: 48px; height: 48px; flex: 0 0 48px;
+  display: grid; place-items: center;
+  background: rgba(8, 11, 22, 0.75);
+  border-radius: 10px; font-size: 26px;
+}
+.shop-info { flex: 1; }
+.shop-name { font-size: 17px; font-weight: 700; margin-bottom: 3px; }
+.shop-desc { font-size: 13px; color: rgba(255,255,255,.65); }
+.shop-price { display: flex; align-items: center; gap: 6px; font-size: 16px; font-weight: 800; color: #ffd76a; }
+.shop-price .coin.mini { width: 16px; height: 16px; }
+.shop-status { font-size: 13px; font-weight: 700; }
+.shop-status.eq { color: #2ee6a8; }
+.shop-hint { text-align: center; font-size: 11px; margin-top: 10px; color: rgba(255,255,255,.5); }
+
+/* ---------- Minimap (dreapta sub bara de monede) ---------- */
+#tool-panel { display: none; }
+#minimap-card {
+  position: absolute; right: 22px; top: 100px;
+  padding: 10px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(28, 36, 58, 0.92), rgba(18, 23, 38, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 14px rgba(0,0,0,.35);
+}
+#minimap { display: block; border-radius: 10px; }
+
+/* ---------- Joystick (stanga jos) ---------- */
+#joystick {
+  position: absolute; left: 38px; bottom: 38px;
+  width: 184px; height: 184px;
+  border-radius: 50%;
+  background: rgba(25, 32, 52, 0.22);
+  border: 2px solid rgba(255, 255, 255, 0.28);
+  backdrop-filter: blur(2px);
+}
+#joy-knob {
+  position: absolute; left: 50%; top: 50%;
+  width: 76px; height: 76px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 3px 10px rgba(10,15,35,.3);
+}
+.joy-arrow { position: absolute; width: 0; height: 0; opacity: .55; }
+.joy-arrow.up    { top: 10px;  left: 50%; transform: translateX(-50%); border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 10px solid #fff; }
+.joy-arrow.down  { bottom: 10px; left: 50%; transform: translateX(-50%); border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 10px solid #fff; }
+.joy-arrow.left  { left: 10px; top: 50%; transform: translateY(-50%); border-top: 8px solid transparent; border-bottom: 8px solid transparent; border-right: 10px solid #fff; }
+.joy-arrow.right { right: 10px; top: 50%; transform: translateY(-50%); border-top: 8px solid transparent; border-bottom: 8px solid transparent; border-left: 10px solid #fff; }
+
+/* ---------- Use (dreapta jos) ---------- */
+#use-btn {
+  position: absolute; right: 44px; bottom: 38px;
+  width: 160px; height: 160px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255, 255, 255, 0.25);
+  background: rgba(25, 32, 52, 0.42);
+  color: #fff;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+  font-family: inherit; font-size: 24px; font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(2px);
+}
+#use-btn svg { width: 44px; height: 44px; }
+#use-btn:active { transform: scale(.95); background: rgba(35, 45, 70, 0.5); }
+
+/* Full-screen edge-to-edge pe mobil, fara margini */
+html, body {
+  padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
+  overscroll-behavior: none;
+  touch-action: none;
+}
+#game { width: 100vw; height: 100vh; height: 100dvh; }
+
+/* Prompt "roteste telefonul" cand esti in portrait */
+#rotate-prompt {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(14, 18, 32, 0.95);
+  z-index: 9999;
+  color: #fff;
+  text-align: center;
+  align-items: center; justify-content: center;
+  flex-direction: column; gap: 20px;
+  font-size: 20px; font-weight: 700;
+  padding: 30px;
+}
+#rotate-prompt .rot-icon {
+  font-size: 80px;
+  animation: rotHint 1.5s ease-in-out infinite;
+}
+@keyframes rotHint {
+  0%, 100% { transform: rotate(-90deg); }
+  50% { transform: rotate(0deg); }
+}
+
+@media (orientation: portrait) and (max-width: 900px) {
+  #rotate-prompt { display: flex; }
+  #ui { display: none; }
+}
+
+/* =================== RESPONSIVE MOBILE =================== */
+@media (max-width: 900px), (pointer: coarse) {
+  /* Cards mai mici */
+  .card { border-radius: 12px; }
+
+  /* Level card - sus stanga, mic */
+  #level-card {
+    top: 10px; left: 10px;
+    width: 44%; max-width: 220px;
+    padding: 10px 12px 8px;
+  }
+  .level-title { font-size: 17px; margin-bottom: 6px; }
+  .bar-track { height: 10px; border-radius: 6px; }
+  .bar-label { margin-top: 5px; font-size: 12px; }
+
+  /* Objective sub level */
+  #objective-card {
+    top: 82px; left: 10px;
+    width: 44%; max-width: 220px;
+    padding: 8px 12px 8px;
+  }
+  .objective-row { gap: 8px; margin-bottom: 6px; }
+  .objective-icon { width: 30px; height: 30px; flex: 0 0 30px; font-size: 16px; border-radius: 8px; }
+  .objective-text { font-size: 13px; }
+  .progress-pct { font-size: 13px; }
+
+  /* Top-right: coin pill + settings, mai mici */
+  #top-right { top: 10px; right: 10px; gap: 8px; }
+  .card.pill { padding: 0 14px 0 10px; height: 46px; }
+  .coin { width: 22px; height: 22px; }
+  .coin-value { font-size: 16px; }
+  .card.square { width: 46px; height: 46px; }
+  .card.square svg { width: 20px; height: 20px; }
+
+  /* Minimap sub bara de monede */
+  #minimap-card {
+    top: 62px; right: 10px;
+    padding: 6px;
+  }
+  #minimap { width: 110px !important; height: 110px !important; }
+
+  /* Joystick jos-stanga, mai mic */
+  #joystick {
+    left: 16px; bottom: 16px;
+    width: 130px; height: 130px;
+  }
+  #joy-knob { width: 54px; height: 54px; }
+  .joy-arrow.up    { top: 6px; }
+  .joy-arrow.down  { bottom: 6px; }
+  .joy-arrow.left  { left: 6px; }
+  .joy-arrow.right { right: 6px; }
+
+  /* Use jos-dreapta, mai mic */
+  #use-btn {
+    right: 20px; bottom: 20px;
+    width: 100px; height: 100px;
+    font-size: 15px;
+  }
+  #use-btn svg { width: 30px; height: 30px; }
+
+  /* Shop - overlay mare centrat cand se deschide */
+  #shop-panel {
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 88%; max-width: 380px;
+    padding: 14px 16px 12px;
+  }
+  @keyframes shopFade { from { opacity: 0; transform: translate(-50%, -50%) scale(.95); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+  .shop-title { font-size: 20px; margin-bottom: 10px; }
+  .shop-item { padding: 8px 10px; gap: 10px; }
+  .shop-icon { width: 40px; height: 40px; flex: 0 0 40px; font-size: 22px; }
+  .shop-name { font-size: 15px; }
+  .shop-desc { font-size: 11px; }
+  .shop-price { font-size: 14px; }
+  .shop-status { font-size: 11px; }
+}
+
+/* Landscape scurt: și mai compact */
+@media (max-height: 500px) and (pointer: coarse) {
+  #level-card, #objective-card { display: none; }
+  #minimap-card { top: 10px; right: 10px; }
+  #minimap { width: 90px !important; height: 90px !important; }
+  #joystick { width: 110px; height: 110px; left: 12px; bottom: 12px; }
+  #joy-knob { width: 46px; height: 46px; }
+  #use-btn { width: 82px; height: 82px; right: 12px; bottom: 12px; font-size: 13px; }
+  #use-btn svg { width: 24px; height: 24px; }
+}

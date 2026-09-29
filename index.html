@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Snow Game">
+<meta name="theme-color" content="#0a0e16">
+<meta name="format-detection" content="telephone=no">
+<meta name="msapplication-tap-highlight" content="no">
+<meta name="color-scheme" content="dark">
+<title>Snow Game — Winter Work Simulator</title>
+
+<!-- PWA manifest + icons -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" sizes="any" href="icons/icon-512.svg">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.svg">
+<link rel="mask-icon" href="icons/icon-512.svg" color="#0a0e16">
+
+<link rel="stylesheet" href="css/ui.css?v=30">
+<style>
+  /* ETAPA 16 — mobile hardening + safe-area */
+  html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent; touch-action: none; }
+  body {
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  #ui, #touch-ui { contain: layout style; }
+  /* Safe-area pentru toate colturile UI cand suntem in PWA standalone / iOS notch */
+  #touch-ui .touch-joystick.left { margin-left: env(safe-area-inset-left, 0px); margin-bottom: env(safe-area-inset-bottom, 0px); }
+  #touch-ui .touch-joystick.right { margin-right: env(safe-area-inset-right, 0px); margin-bottom: env(safe-area-inset-bottom, 0px); }
+  body.is-standalone #level-card, body.is-standalone #objective-card { margin-top: env(safe-area-inset-top, 0px); margin-left: env(safe-area-inset-left, 0px); }
+  body.is-standalone #top-right { margin-top: env(safe-area-inset-top, 0px); margin-right: env(safe-area-inset-right, 0px); }
+  body.is-standalone #minimap-card { margin-bottom: env(safe-area-inset-bottom, 0px); margin-left: env(safe-area-inset-left, 0px); }
+  body.is-standalone #use-btn { margin-bottom: env(safe-area-inset-bottom, 0px); margin-right: env(safe-area-inset-right, 0px); }
+  body.is-standalone #tool-panel { margin-right: env(safe-area-inset-right, 0px); margin-top: env(safe-area-inset-top, 0px); }
+  body.battery-saver-active { filter: saturate(0.85) brightness(0.92); }
+  body.reduced-motion *, body.reduced-motion *::before, body.reduced-motion *::after {
+    animation-duration: 0.001s !important; transition-duration: 0.001s !important;
+  }
+  @media (max-width: 768px) {
+    #level-card, #objective-card { transform: scale(0.85); transform-origin: top left; }
+    #tool-panel { transform: scale(0.9); transform-origin: top right; }
+  }
+
+  /* ================= FIX HUD OVERLAP (v29) =================
+     Toate butoanele-trigger ale panourilor sunt hardcoded la position:fixed cu offset-uri
+     stanga/dreapta care se suprapun pe mobil. Solutie: pe touch device (body.has-touch)
+     SAU pe viewport ingust — ascundem toate trigger-urile individuale si folosim
+     doar butonul ☰ din TouchControlSystem care deschide MobileMenuDrawer (14 panouri). */
+  body.has-touch #company-trigger-btn,
+  body.has-touch #employees-trigger-btn,
+  body.has-touch #fleet-trigger-btn,
+  body.has-touch #contracts-trigger,
+  body.has-touch #garage-hud-trigger,
+  body.has-touch #missions-hud-badge,
+  body.has-touch #mp-trigger-btn,
+  body.has-touch #prestige-trigger-btn,
+  body.has-touch #social-trigger-btn,
+  body.has-touch #store-trigger-btn,
+  body.has-touch #vehicle-trigger,
+  body.has-touch #world-trigger,
+  body.has-touch #events-hud-btn,
+  body.has-touch #boost-indicator {
+    display: none !important;
+  }
+  /* Legacy joystick + Use pe touch — folosim TouchControlSystem */
+  body.has-touch #joystick, body.has-touch #use-btn { display: none !important; }
+  /* Ascunde diamond + reputation pe touch pentru a evita overflow orizontal */
+  body.has-touch #diamond-card, body.has-touch #reputation-card { display: none !important; }
+  /* Currency cluster mai compact si mutat cu 64px stanga sa lase loc pentru butonul ☰ (top:12 right:12 w:44) */
+  body.has-touch #top-right { gap: 6px !important; top: 8px !important; right: calc(64px + env(safe-area-inset-right, 0px)) !important; }
+  body.has-touch .card.currency { height: 40px !important; padding: 0 12px 0 8px !important; border-radius: 20px !important; }
+  body.has-touch .card.currency .currency-value { font-size: 14px !important; }
+  body.has-touch .card.currency .coin, body.has-touch .card.currency .coin-diamond { width: 20px !important; height: 20px !important; }
+  body.has-touch .card.square { width: 40px !important; height: 40px !important; }
+  body.has-touch .card.square svg { width: 18px !important; height: 18px !important; }
+  /* Level + objective compacte pe touch */
+  body.has-touch #level-card { top: 8px !important; left: 8px !important; width: 200px !important; padding: 8px 10px 7px !important; transform: none !important; }
+  body.has-touch #level-card .level-title { font-size: 15px !important; margin-bottom: 5px !important; }
+  body.has-touch #level-card .bar-track { height: 8px !important; }
+  body.has-touch #level-card .bar-label { font-size: 11px !important; margin-top: 4px !important; }
+  body.has-touch #objective-card { top: 62px !important; left: 8px !important; width: 200px !important; padding: 7px 10px !important; transform: none !important; }
+  body.has-touch #objective-card .objective-icon { width: 26px !important; height: 26px !important; flex: 0 0 26px !important; font-size: 15px !important; }
+  body.has-touch #objective-card .objective-text { font-size: 12px !important; }
+  body.has-touch #objective-card .progress-pct { font-size: 12px !important; }
+  /* Minimap mai mic + sub top-right pe touch */
+  body.has-touch #minimap-card { top: 56px !important; right: calc(8px + env(safe-area-inset-right, 0px)) !important; padding: 5px !important; }
+  body.has-touch #minimap { width: 84px !important; height: 84px !important; }
+
+  /* Fallback viewport ingust dar fara touch (desktop redimensionat, DevTools) */
+  @media (max-width: 900px) {
+    #company-trigger-btn, #employees-trigger-btn, #fleet-trigger-btn,
+    #contracts-trigger, #garage-hud-trigger, #missions-hud-badge,
+    #mp-trigger-btn, #prestige-trigger-btn, #social-trigger-btn,
+    #store-trigger-btn, #vehicle-trigger, #world-trigger,
+    #events-hud-btn {
+      display: none !important;
+    }
+    #diamond-card, #reputation-card { display: none !important; }
+  }
+
+  /* Desktop (>1024px pointer:fine) — grupeaza trigger buttons intr-un rail vertical dreapta jos */
+  @media (min-width: 1025px) and (pointer: fine) {
+    body:not(.has-touch) #vehicle-trigger,
+    body:not(.has-touch) #contracts-trigger,
+    body:not(.has-touch) #garage-hud-trigger,
+    body:not(.has-touch) #company-trigger-btn,
+    body:not(.has-touch) #employees-trigger-btn,
+    body:not(.has-touch) #fleet-trigger-btn,
+    body:not(.has-touch) #world-trigger,
+    body:not(.has-touch) #missions-hud-badge,
+    body:not(.has-touch) #events-hud-btn,
+    body:not(.has-touch) #store-trigger-btn,
+    body:not(.has-touch) #social-trigger-btn,
+    body:not(.has-touch) #mp-trigger-btn,
+    body:not(.has-touch) #prestige-trigger-btn {
+      position: fixed !important;
+      left: auto !important;
+      right: calc(12px + env(safe-area-inset-right, 0px)) !important;
+      top: auto !important;
+      min-width: 150px !important;
+      text-align: left !important;
+      font-size: 13px !important;
+      z-index: 20 !important;
+    }
+    body:not(.has-touch) #vehicle-trigger      { bottom: calc(12px + env(safe-area-inset-bottom, 0px) + 0px)   !important; }
+    body:not(.has-touch) #contracts-trigger    { bottom: calc(12px + env(safe-area-inset-bottom, 0px) + 44px)  !important; }
+    body:not(.has-touch) #garage-hud-trigger   { bottom: calc(12px + env(safe-area-inset-bottom, 0px) + 88px)  !important; }
+    body:not(.has-touch) #company-trigger-btn  { bottom: calc(12px + env(safe-area-inset-bottom, 0px) + 132px) !important; }
+    body:not(.has-touch) #employees-trigger-btn{ bottom: calc(12px + env(safe-area-inset-bottom, 0px) + 176px) !important; }
+    body:not(.has-touch) #fleet-trigger-btn    { bottom: calc(12px + env(safe-area-inset-bottom, 0px) + 220px) !important; }
+    body:not(.has-touch) #world-trigger        { bottom: calc(12px + env(safe-area-inset-bottom, 0px) + 264px) !important; }
+    body:not(.has-touch) #missions-hud-badge   { bottom: calc(12px + env(safe-area-inset-bottom, 0px) + 308px) !important; }
+    body:not(.has-touch) #events-hud-btn       { bottom: calc(12px + env(safe-area-inset-bottom, 0px) + 352px) !important; }
+    body:not(.has-touch) #store-trigger-btn    { bottom: calc(12px + env(safe-area-inset-bottom, 0px) + 396px) !important; }
+    body:not(.has-touch) #social-trigger-btn   { bottom: calc(12px + env(safe-area-inset-bottom, 0px) + 440px) !important; }
+    body:not(.has-touch) #mp-trigger-btn       { bottom: calc(12px + env(safe-area-inset-bottom, 0px) + 484px) !important; }
+    body:not(.has-touch) #prestige-trigger-btn { bottom: calc(12px + env(safe-area-inset-bottom, 0px) + 528px) !important; }
+  }
+</style>
+<script type="importmap">
+{ "imports": { "three": "./js/lib/three.module.js" } }
+</script>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<!-- Prompt pentru rotire pe telefon in portrait -->
+<div id="rotate-prompt">
+  <div class="rot-icon">📱</div>
+  <div>Rotește telefonul<br>pe orizontală<br>pentru a juca</div>
+</div>
+
+<!-- ===================== UI OVERLAY ===================== -->
+<div id="ui">
+
+  <!-- STANGA SUS : Level + XP -->
+  <div class="card" id="level-card">
+    <div class="level-title" id="ui-level">Level 1</div>
+    <div class="bar-track"><div class="bar-fill xp" id="ui-xp-fill" style="width:0%"></div></div>
+    <div class="bar-label" id="ui-xp-label">0 / 100</div>
+  </div>
+
+  <!-- STANGA SUS : Objective -->
+  <div class="card" id="objective-card">
+    <div class="objective-row">
+      <div class="objective-icon">&#10052;</div>
+      <div class="objective-text">Curata toata harta</div>
+    </div>
+    <div class="objective-progress">
+      <div class="bar-track slim"><div class="bar-fill white" id="ui-progress-fill" style="width:0%"></div></div>
+      <div class="progress-pct" id="ui-progress-pct">0%</div>
+    </div>
+  </div>
+
+  <!-- DREAPTA SUS : Coins + Diamonds + Settings -->
+  <div id="top-right">
+    <div class="card currency" id="coin-card">
+      <span class="coin coin-gold"></span>
+      <span class="currency-value" id="ui-coins">0</span>
+    </div>
+    <div class="card currency" id="diamond-card">
+      <span class="coin coin-diamond"></span>
+      <span class="currency-value" id="ui-diamonds">0</span>
+    </div>
+    <div class="card currency" id="reputation-card" title="Reputatie">
+      <span class="coin coin-rep" aria-hidden="true">⭐</span>
+      <span class="currency-value" id="ui-reputation">0</span>
+    </div>
+    <button class="card square" id="settings-btn" aria-label="Settings">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="#fff">
+        <path d="M19.4 13a7.6 7.6 0 0 0 .1-1 7.6 7.6 0 0 0-.1-1l2.1-1.7a.5.5 0 0 0 .1-.6l-2-3.5a.5.5 0 0 0-.6-.2l-2.5 1a7.7 7.7 0 0 0-1.7-1l-.4-2.6a.5.5 0 0 0-.5-.4h-4a.5.5 0 0 0-.5.4l-.4 2.6a7.7 7.7 0 0 0-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.5a.5.5 0 0 0 .1.6L4.5 11a7.6 7.6 0 0 0-.1 1 7.6 7.6 0 0 0 .1 1l-2.1 1.7a.5.5 0 0 0-.1.6l2 3.5c.1.2.4.3.6.2l2.5-1a7.7 7.7 0 0 0 1.7 1l.4 2.6c0 .2.2.4.5.4h4c.2 0 .5-.2.5-.4l.4-2.6a7.7 7.7 0 0 0 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5a.5.5 0 0 0-.1-.6L19.4 13zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- DREAPTA : Tool shop -->
+  <div class="card" id="tool-panel">
+
+    <div class="tool-item equipped" data-tool="shovel">
+      <div class="tool-icon">
+        <svg viewBox="0 0 32 32" width="30" height="30">
+          <rect x="14.6" y="2" width="2.8" height="15" rx="1.2" fill="#9aa3b5" transform="rotate(35 16 9)"/>
+          <path d="M9 19 L23 19 L21.5 28 Q16 31 10.5 28 Z" fill="#d7dceb"/>
+          <rect x="9" y="17.4" width="14" height="2.6" rx="1.2" fill="#8a92a6"/>
+        </svg>
+      </div>
+      <div class="tool-info">
+        <div class="tool-name">Shovel</div>
+        <div class="tool-sub equipped-label">EQUIPPED</div>
+      </div>
+    </div>
+
+    <div class="tool-item locked" data-tool="broom">
+      <div class="tool-icon">
+        <svg viewBox="0 0 32 32" width="30" height="30">
+          <rect x="14.6" y="2" width="2.8" height="14" rx="1.2" fill="#d8893b" transform="rotate(25 16 9)"/>
+          <path d="M10 17 L22 17 L25 29 L7 29 Z" fill="#e8a84c"/>
+          <path d="M10 22 L22 22 M9 25.5 L23 25.5" stroke="#c07f2e" stroke-width="1.4"/>
+        </svg>
+      </div>
+      <div class="tool-info">
+        <div class="tool-name">Broom</div>
+        <div class="tool-sub"><span class="coin mini"></span>500</div>
+      </div>
+      <div class="lock">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="rgba(255,255,255,.85)">
+          <path d="M17 9V7a5 5 0 0 0-10 0v2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2zm-8-2a3 3 0 0 1 6 0v2H9V7z"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="tool-item locked" data-tool="blower">
+      <div class="tool-icon">
+        <svg viewBox="0 0 32 32" width="30" height="30">
+          <rect x="6" y="10" width="14" height="9" rx="4" fill="#d84040"/>
+          <path d="M19 12 L29 9 L29 16 L19 17 Z" fill="#2b303e"/>
+          <rect x="9" y="18" width="4" height="7" rx="1.6" fill="#2b303e"/>
+          <circle cx="11" cy="14.5" r="2.6" fill="#a92f2f"/>
+        </svg>
+      </div>
+      <div class="tool-info">
+        <div class="tool-name">Blower</div>
+        <div class="tool-sub"><span class="coin mini"></span>1,250</div>
+      </div>
+      <div class="lock">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="rgba(255,255,255,.85)">
+          <path d="M17 9V7a5 5 0 0 0-10 0v2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2zm-8-2a3 3 0 0 1 6 0v2H9V7z"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="tool-item locked" data-tool="heat">
+      <div class="tool-icon">
+        <svg viewBox="0 0 32 32" width="30" height="30">
+          <rect x="13" y="14" width="6" height="14" rx="2.4" fill="#2b303e" transform="rotate(35 16 21)"/>
+          <path d="M16 2 C20 7 23 9 23 13 A7 7 0 0 1 9 13 C9 9 12 7 16 2 Z" fill="#4fc3f7"/>
+          <path d="M16 7 C18 9.5 20 10.8 20 13 A4 4 0 0 1 12 13 C12 10.8 14 9.5 16 7 Z" fill="#aee6ff"/>
+        </svg>
+      </div>
+      <div class="tool-info">
+        <div class="tool-name">Heat Tool</div>
+        <div class="tool-sub"><span class="coin mini"></span>2,500</div>
+      </div>
+      <div class="lock">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="rgba(255,255,255,.85)">
+          <path d="M17 9V7a5 5 0 0 0-10 0v2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2zm-8-2a3 3 0 0 1 6 0v2H9V7z"/>
+        </svg>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- STANGA JOS : Joystick (mobile) -->
+  <div id="joystick">
+    <div class="joy-arrow up"></div>
+    <div class="joy-arrow down"></div>
+    <div class="joy-arrow left"></div>
+    <div class="joy-arrow right"></div>
+    <div id="joy-knob"></div>
+  </div>
+
+  <!-- SHOP (apare cand esti langa NEXT TOOL) -->
+  <div class="card" id="shop-panel" style="display:none">
+    <div class="shop-title">UNELTE</div>
+    <div class="shop-list" id="shop-list"></div>
+    <div class="shop-hint">Apropie-te de <span style="color:#ffc043">◆</span> pentru cumpărături</div>
+  </div>
+
+  <!-- MINIMAP -->
+  <div class="card" id="minimap-card">
+    <canvas id="minimap" width="180" height="180"></canvas>
+  </div>
+
+  <!-- DREAPTA JOS : Use -->
+  <button id="use-btn">
+    <svg viewBox="0 0 24 24" width="34" height="34" fill="#fff">
+      <circle cx="13.5" cy="4.5" r="2.2"/>
+      <path d="M12.9 8.2 9.6 10a1.6 1.6 0 0 0-.7 2l1.4 3.4-3 4.6a1.4 1.4 0 1 0 2.4 1.5l3.3-5.1-1.2-2.8 2.2-1.1.9 2.1a1.6 1.6 0 0 0 1.5 1h3a1.4 1.4 0 1 0 0-2.8h-2.1l-1.5-3.5a2.4 2.4 0 0 0-3.3-1.1z"/>
+      <path d="M8.6 9.1 6.2 11a1.3 1.3 0 0 0-.4 1.7l.2.4 2.9-1.7z"/>
+    </svg>
+    <span>Use</span>
+  </button>
+
+</div>
+
+<script>
+  // PWA service worker registration (silent fallback if unsupported)
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch((err) => {
+        console.warn('[pwa] service worker registration failed', err);
+      });
+    });
+  }
+</script>
+<script type="module" src="js/main.js?v=30"></script>
+</body>
+</html>
