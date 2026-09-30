@@ -23,6 +23,7 @@ import { createHapticsSystem } from './systems/HapticsSystem.js?v=25';
 import { createHudBinding } from './ui/HudBinding.js?v=4';
 import { createSettingsPanel } from './ui/SettingsPanel.js?v=25';
 import { createPauseOverlay } from './ui/PauseOverlay.js?v=1';
+import { createHudLayout } from './ui/HudLayout.js?v=31';
 
 // === ETAPA 3 — Contracts ===
 import { createContractStore } from './state/ContractStore.js?v=13';
@@ -992,6 +993,17 @@ const mobileMenuDrawer = createMobileMenuDrawer({
   },
   settingsPanel
 });
+
+// HUD Mockup Layout v31 — clean bottom bar + top zones
+const hudLayout = createHudLayout({
+  playerStore, contractStore, worldStore,
+  settingsPanel, contractPanel, worldMapPanel, garagePanel, companyPanel,
+  mobileMenuDrawer, audio, haptics
+});
+
+// Wire Use button to sprint/tool
+window.addEventListener('hud:use:down', () => { try { controls.setSprint && controls.setSprint(true); } catch(_){} });
+window.addEventListener('hud:use:up', () => { try { controls.setSprint && controls.setSprint(false); } catch(_){} });
 
 // Performance HUD (debug F3 sau ?perf=1)
 const performanceHud = createPerformanceHud({ performanceMonitor, qualitySystem, renderer });

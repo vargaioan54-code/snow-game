@@ -20,7 +20,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.svg">
 <link rel="mask-icon" href="icons/icon-512.svg" color="#0a0e16">
 
-<link rel="stylesheet" href="css/ui.css?v=30">
+<link rel="stylesheet" href="css/ui.css?v=31">
 <style>
   /* ETAPA 16 — mobile hardening + safe-area */
   html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent; touch-action: none; }
@@ -139,6 +139,84 @@
     body:not(.has-touch) #social-trigger-btn   { bottom: calc(12px + env(safe-area-inset-bottom, 0px) + 440px) !important; }
     body:not(.has-touch) #mp-trigger-btn       { bottom: calc(12px + env(safe-area-inset-bottom, 0px) + 484px) !important; }
     body:not(.has-touch) #prestige-trigger-btn { bottom: calc(12px + env(safe-area-inset-bottom, 0px) + 528px) !important; }
+  }
+
+  /* ================= HUD MOCKUP LAYOUT v31 ================= */
+  body.hud-mockup-active #hud-mockup { position: fixed; inset: 0; pointer-events: none; z-index: 90; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+  body.hud-mockup-active #hud-mockup > * { pointer-events: auto; }
+
+  .hud-topleft { position: fixed; top: calc(16px + env(safe-area-inset-top)); left: calc(16px + env(safe-area-inset-left)); display: flex; flex-direction: column; gap: 12px; z-index: 100; }
+  .hud-level-card, .hud-job-card { background: rgba(26, 30, 40, 0.88); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 20px; padding: 14px 18px; color: white; min-width: 220px; box-shadow: 0 4px 20px rgba(0,0,0,0.35); }
+  .hud-level-card .title { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+  .hud-level-card .xp-bar { height: 8px; background: rgba(255,255,255,0.15); border-radius: 4px; overflow: hidden; margin-bottom: 6px; }
+  .hud-level-card .xp-fill { height: 100%; background: linear-gradient(90deg, #4a9eff, #20d0e0); border-radius: 4px; transition: width 0.3s; }
+  .hud-level-card .xp-text { font-size: 14px; opacity: 0.85; margin-bottom: 8px; }
+  .hud-level-card .subtitle { font-size: 12px; opacity: 0.7; }
+  .hud-job-card { display: flex; align-items: center; gap: 12px; }
+  .hud-job-card .icon { width: 40px; height: 40px; background: #2a3040; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .hud-job-card .body { flex: 1; min-width: 0; }
+  .hud-job-card .job-title { font-size: 15px; font-weight: 500; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hud-job-card .job-progress { height: 4px; background: rgba(255,255,255,0.15); border-radius: 2px; overflow: hidden; margin-bottom: 4px; }
+  .hud-job-card .job-fill { height: 100%; background: white; border-radius: 2px; transition: width 0.3s; }
+  .hud-job-card .job-meta { font-size: 11px; opacity: 0.65; display: flex; justify-content: space-between; }
+
+  .hud-topright { position: fixed; top: calc(16px + env(safe-area-inset-top)); right: calc(16px + env(safe-area-inset-right)); display: flex; gap: 10px; z-index: 100; align-items: center; }
+  .hud-pill { background: rgba(26, 30, 40, 0.88); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 10px 20px; border-radius: 30px; display: flex; align-items: center; gap: 8px; color: white; font-weight: 600; font-size: 16px; }
+  .hud-pill .icon { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .hud-pill.coins { color: #ffb84a; }
+  .hud-pill.diamonds { color: #4ac4ff; }
+  .hud-icon-btn { width: 48px; height: 48px; border-radius: 50%; background: rgba(26, 30, 40, 0.88); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; font-size: 20px; border: none; transition: transform 0.1s; }
+  .hud-icon-btn:active { transform: scale(0.9); }
+
+  .hud-bottombar { position: fixed; bottom: calc(20px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: rgba(26, 30, 40, 0.9); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 8px 12px; border-radius: 40px; display: flex; gap: 8px; z-index: 100; box-shadow: 0 6px 24px rgba(0,0,0,0.4); }
+  .hud-bottombar .bb-btn { width: 48px; height: 48px; border-radius: 50%; background: #2a3040; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; font-size: 22px; border: none; transition: all 0.15s; }
+  .hud-bottombar .bb-btn:hover { background: #3a4050; }
+  .hud-bottombar .bb-btn:active { transform: scale(0.9); background: #4a9eff; }
+
+  .hud-use-btn { position: fixed; bottom: calc(30px + env(safe-area-inset-bottom)); right: calc(30px + env(safe-area-inset-right)); width: 100px; height: 100px; border-radius: 50%; background: rgba(26, 30, 40, 0.88); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; color: white; border: none; z-index: 100; gap: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.35); transition: transform 0.1s; touch-action: none; user-select: none; }
+  .hud-use-btn:active { transform: scale(0.92); background: rgba(74, 158, 255, 0.4); }
+  .hud-use-btn .icon { font-size: 32px; }
+  .hud-use-btn .label { font-size: 14px; font-weight: 500; }
+
+  /* Ascunde HUD-ul vechi cand mockup layout e activ */
+  body.hud-mockup-active #level-card,
+  body.hud-mockup-active #objective-card,
+  body.hud-mockup-active #tool-panel,
+  body.hud-mockup-active #top-right,
+  body.hud-mockup-active #minimap-card,
+  body.hud-mockup-active #weather-card,
+  body.hud-mockup-active #contract-hud-card,
+  body.hud-mockup-active #vehicle-hud-card,
+  body.hud-mockup-active .hud-panel-buttons,
+  body.hud-mockup-active #contracts-trigger,
+  body.hud-mockup-active #garage-hud-trigger,
+  body.hud-mockup-active #company-trigger-btn,
+  body.hud-mockup-active #employees-trigger-btn,
+  body.hud-mockup-active #fleet-trigger-btn,
+  body.hud-mockup-active #missions-hud-badge,
+  body.hud-mockup-active #events-hud-btn,
+  body.hud-mockup-active #mp-trigger-btn,
+  body.hud-mockup-active #prestige-trigger-btn,
+  body.hud-mockup-active #social-trigger-btn,
+  body.hud-mockup-active #store-trigger-btn,
+  body.hud-mockup-active #vehicle-trigger,
+  body.hud-mockup-active #world-trigger,
+  body.hud-mockup-active #settings-btn,
+  body.hud-mockup-active #joystick,
+  body.hud-mockup-active #use-btn { display: none !important; }
+
+  /* Pastreaza TouchControlSystem joystick left (movement) — ascunde doar joystick right (camera) + action buttons */
+  body.hud-mockup-active #touch-ui .touch-joystick.right,
+  body.hud-mockup-active #touch-ui .touch-actions,
+  body.hud-mockup-active #touch-ui .touch-menu-btn { display: none !important; }
+
+  @media (max-width: 480px) {
+    .hud-level-card, .hud-job-card { min-width: 180px; padding: 10px 14px; }
+    .hud-level-card .title { font-size: 18px; }
+    .hud-use-btn { width: 80px; height: 80px; }
+    .hud-use-btn .icon { font-size: 26px; }
+    .hud-use-btn .label { font-size: 12px; }
+    .hud-bottombar .bb-btn { width: 42px; height: 42px; font-size: 20px; }
   }
 </style>
 <script type="importmap">
@@ -317,6 +395,6 @@
     });
   }
 </script>
-<script type="module" src="js/main.js?v=30"></script>
+<script type="module" src="js/main.js?v=31"></script>
 </body>
 </html>
